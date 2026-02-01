@@ -9,6 +9,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&csharp_dir)?;
 
     csbindgen::Builder::default()
+        .csharp_namespace("CsBindGen")
         .input_extern_file("./src/lib.rs")
         .csharp_dll_name(package_name)
         .csharp_class_accessibility("internal")
