@@ -1,0 +1,4 @@
+[alias]
+xtask = "run --manifest-path xtask/Cargo.toml --"
+monitor = "xtask monitor-rust-source"
+build-native = "xtask build-native"
