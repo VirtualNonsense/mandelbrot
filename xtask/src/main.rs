@@ -36,7 +36,7 @@ enum Cmd {
         release: bool,
 
         /// .NET version (defaults to 10)
-        #[arg(long, value_enum)]
+        #[arg(long, value_enum,  default_value_t = paths::DotNetVersion::default())]
         dotnet_version: paths::DotNetVersion,
 
         /// Build the .NET MAUI solution after staging natives
@@ -186,8 +186,10 @@ fn build_dotnet_solution(
     let tfm = dotnet_tfm(version, platform);
     let rid = dotnet_rid(platform, arch);
 
+    let csproj = paths::maui_project_file();
     let mut cmd = process::cmd_in_dir("dotnet", &repo_root);
     cmd.arg("build")
+        .arg(csproj)
         .arg("-c")
         .arg(config)
         .arg("-f")
@@ -195,6 +197,9 @@ fn build_dotnet_solution(
         .arg("-r")
         .arg(rid);
 
+    if platform == paths::Platform::Windows {
+        cmd.arg("/p:UseMonoRuntime=false");
+    }
     process::run(cmd)?;
     Ok(())
 }

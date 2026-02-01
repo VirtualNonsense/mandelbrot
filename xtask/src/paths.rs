@@ -93,6 +93,16 @@ pub fn project_root() -> PathBuf {
         .to_path_buf()
 }
 
+pub fn maui_root() -> PathBuf {
+    project_root().join("mandelbrot")
+}
+pub fn maui_project_file() -> PathBuf {
+    let file = maui_root().join("mandelbrot.csproj");
+    assert!(file.exists());
+    assert!(file.is_file());
+    file
+}
+
 /// Path to the Rust library root (contains Cargo.toml)
 pub fn rust_fractal_root() -> PathBuf {
     project_root().join("rust_fractal")

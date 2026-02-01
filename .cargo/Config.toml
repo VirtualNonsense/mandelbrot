@@ -2,3 +2,15 @@
 xtask = "run --manifest-path xtask/Cargo.toml --"
 monitor = "xtask monitor-rust-source"
 build-native = "xtask build-native"
+build-windows-debug = "build-native windows x64 --dotnet"
+build-windows-release = "build-native windows x64 --dotnet --release"
+build-android = "build-native android arm64 --dotnet --release"
+
+
+
+[target.aarch64-linux-android]
+linker = "clang.exe"
+
+rustflags = [
+  "-C", "link-arg=--target=aarch64-linux-android21",
+]
