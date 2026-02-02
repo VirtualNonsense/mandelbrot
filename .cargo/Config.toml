@@ -2,10 +2,8 @@
 xtask = "run --manifest-path xtask/Cargo.toml --"
 monitor = "xtask monitor-rust-source"
 build-native = "xtask build-native"
-build-windows-debug = "build-native windows x64 --dotnet"
-build-windows-release = "build-native windows x64 --dotnet --release"
-build-android = "build-native android arm64 --dotnet --release"
-
+build-windows-debug = "build-native --targets windows-x64 android-arm64 --reload-dotnet"
+build-windows-release = "build-native --targets windows-x64 android-arm64 --reload-dotnet --release"
 
 
 [target.aarch64-linux-android]

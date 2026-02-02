@@ -53,15 +53,6 @@ impl Platform {
 }
 
 impl Arch {
-    #[allow(dead_code)]
-    pub fn parse(s: &str) -> anyhow::Result<Self> {
-        match s.to_ascii_lowercase().as_str() {
-            "x64" | "amd64" | "x86_64" => Ok(Self::X64),
-            "arm64" | "aarch64" => Ok(Self::Arm64),
-            _ => anyhow::bail!("unknown arch: {s} (expected x64|arm64)"),
-        }
-    }
-
     pub fn as_str(self) -> &'static str {
         match self {
             Arch::X64 => "x64",

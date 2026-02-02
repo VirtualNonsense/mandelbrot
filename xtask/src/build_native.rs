@@ -1,48 +1,10 @@
-use crate::paths::{self, Arch, Platform};
+use crate::Target;
+use crate::paths::{self, Platform};
 use crate::process::{self, cmd_in_dir, run};
 use anyhow::{Context, Result, anyhow};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
-
-#[derive(Debug, Clone)]
-pub struct TargetSpec {
-    pub cargo_target: &'static str,
-    pub arch: Arch,
-}
-pub fn targets_for(platform: Platform) -> &'static [TargetSpec] {
-    match platform {
-        Platform::Windows => &[TargetSpec {
-            cargo_target: "x86_64-pc-windows-msvc",
-            arch: Arch::X64,
-        }],
-        Platform::Android => &[
-            TargetSpec {
-                cargo_target: "aarch64-linux-android",
-                arch: Arch::Arm64,
-            },
-            // Add more ABIs if you want them explicitly:
-            // TargetSpec { cargo_target: "x86_64-linux-android", arch: Arch::X64 },
-        ],
-        Platform::Osx => &[
-            TargetSpec {
-                cargo_target: "aarch64-apple-darwin",
-                arch: Arch::Arm64,
-            },
-            TargetSpec {
-                cargo_target: "x86_64-apple-darwin",
-                arch: Arch::X64,
-            },
-        ],
-        Platform::Ios => &[
-            // Minimal starting point (device):
-            TargetSpec {
-                cargo_target: "aarch64-apple-ios",
-                arch: Arch::Arm64,
-            },
-        ],
-    }
-}
 
 fn host_os_is_macos() -> bool {
     cfg!(target_os = "macos")
@@ -85,13 +47,14 @@ pub(crate) fn pack_nuget(release: bool, version: &str) -> Result<()> {
     process::run(cmd).context("dotnet pack failed")?;
     Ok(())
 }
-pub fn build_and_stage(platform: Platform, release: bool) -> Result<()> {
+/// builds and copies the rust Library for the given target
+pub fn build_and_stage(target: &Target, release: bool) -> Result<()> {
     paths::assert_rust_fractal_exists();
 
-    if platform.requires_macos() && !host_os_is_macos() {
-        return Err(anyhow!("{platform:?} builds require a macOS host"));
+    if target.platform.requires_macos() && !host_os_is_macos() {
+        return Err(anyhow!("{target:?} builds require a macOS host"));
     }
-    if platform.requires_windwos() && !host_os_is_windows() {
+    if target.platform.requires_windwos() && !host_os_is_windows() {
         return Err(anyhow!(
             "Windows builds are expected to run on a Windows host"
         ));
@@ -99,37 +62,34 @@ pub fn build_and_stage(platform: Platform, release: bool) -> Result<()> {
 
     let rust_root = paths::rust_fractal_root();
     let profile_dir = if release { "release" } else { "debug" };
+    let cargo_target = &target.get_rust_architecture_representation();
+    cargo_build(&rust_root, cargo_target, release)?;
 
-    for t in targets_for(platform) {
-        cargo_build(&rust_root, t.cargo_target, release)?;
+    let built_artifact =
+        built_artifact_path(&rust_root, cargo_target, profile_dir, target.platform)?;
+    let dest_file = paths::destination_native_lib_path(target.platform, target.arch);
 
-        let built_artifact =
-            built_artifact_path(&rust_root, t.cargo_target, profile_dir, platform)?;
-        let dest_file = paths::destination_native_lib_path(platform, t.arch);
+    // Create destination directory
+    fs::create_dir_all(
+        dest_file
+            .parent()
+            .expect("destination native lib must have parent dir"),
+    )
+    .with_context(|| format!("create_dir_all failed: {}", dest_file.display()))?;
 
-        // Create destination directory
-        fs::create_dir_all(
-            dest_file
-                .parent()
-                .expect("destination native lib must have parent dir"),
-        )
-        .with_context(|| format!("create_dir_all failed: {}", dest_file.display()))?;
-
-        fs::copy(&built_artifact, &dest_file).with_context(|| {
-            format!(
-                "copy failed: {} -> {}",
-                built_artifact.display(),
-                dest_file.display()
-            )
-        })?;
-
-        eprintln!(
-            "staged: {} -> {}",
+    fs::copy(&built_artifact, &dest_file).with_context(|| {
+        format!(
+            "copy failed: {} -> {}",
             built_artifact.display(),
             dest_file.display()
-        );
-    }
+        )
+    })?;
 
+    eprintln!(
+        "staged: {} -> {}",
+        built_artifact.display(),
+        dest_file.display()
+    );
     Ok(())
 }
 
