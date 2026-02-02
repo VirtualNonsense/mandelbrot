@@ -28,7 +28,7 @@ namespace RustFractals
         ///  this is a test
         /// </summary>
         [DllImport(__DllName, EntryPoint = "mandelbrot_baseline_render_u32", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void mandelbrot_baseline_render_u32(float center_x, float center_y, ulong zoom, int width_px, int height_px, uint max_iter, uint* dst, nuint dst_len);
+        public static extern void mandelbrot_baseline_render_u32(float center_x, float center_y, ulong zoom, int width_px, int height_px, int max_iter, uint* dst, nuint dst_len);
 
 
     }

@@ -17,7 +17,7 @@ pub unsafe extern "C" fn mandelbrot_baseline_render_u32(
     zoom: u64,
     width_px: i32,
     height_px: i32,
-    max_iter: u32,
+    max_iter: i32,
     dst: *mut u32,
     dst_len: usize,
 ) {
@@ -33,6 +33,7 @@ pub unsafe extern "C" fn mandelbrot_baseline_render_u32(
 
     let width = width_px as usize;
     let height = height_px as usize;
+    let max_iter = max_iter.unsigned_abs();
 
     let expected = match width.checked_mul(height) {
         Some(v) => v,
