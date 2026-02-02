@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿
 
 namespace mandelbrot
 {
@@ -11,7 +11,7 @@ namespace mandelbrot
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            var  t = RustFractals.NativeMethods.test();
+            var t = RustFractals.NativeMethods.test();
             return new Window(new AppShell());
         }
     }

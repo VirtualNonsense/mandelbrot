@@ -3,7 +3,7 @@
 use rayon::prelude::*;
 #[unsafe(no_mangle)]
 pub extern "C" fn test() -> u32 {
-    1
+    6
 }
 
 /// # Safety

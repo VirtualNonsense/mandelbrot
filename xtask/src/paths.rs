@@ -77,6 +77,23 @@ pub fn project_root() -> PathBuf {
 pub fn maui_root() -> PathBuf {
     project_root().join("mandelbrot")
 }
+
+pub fn maui_obj() -> Option<PathBuf> {
+    let obj = maui_root().join("obj");
+    if obj.exists() {
+        return Some(obj);
+    }
+    None
+}
+
+pub fn maui_obj_nuget_cache() -> Option<PathBuf> {
+    let obj = maui_obj()?.join("project.nuget.cache");
+    if obj.exists() {
+        return Some(obj);
+    }
+    None
+}
+
 pub fn maui_project_file() -> PathBuf {
     let file = maui_root().join("mandelbrot.csproj");
     assert!(file.exists());

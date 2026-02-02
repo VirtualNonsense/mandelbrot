@@ -28,7 +28,6 @@
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
-    <FractalNativeVersion Condition="'$(FractalNativeVersion)'==''">1</FractalNativeVersion>
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
 
@@ -62,7 +61,7 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
-    <PackageReference Include="RustFractals" Version="1.0.*" VersionOverride="$(FractalNativeVersion)" />
+    <PackageReference Include="RustFractals" Version="1.0.*"/>
 	</ItemGroup>
 
 	<ItemGroup>

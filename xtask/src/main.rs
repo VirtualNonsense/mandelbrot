@@ -99,6 +99,10 @@ This option may be repeated to build multiple targets.
         #[arg(long)]
         release: bool,
 
+        /// cleans up the nugetpackages before building.
+        #[arg(long)]
+        clean_nuget_dir: bool,
+
         /// restores solution with the current build hash as Parameter
         #[arg(long)]
         reload_dotnet: bool,
@@ -124,54 +128,56 @@ fn main() -> Result<()> {
             reload_dotnet,
             dotnet_version,
             build_dotnet,
-        } => build_native_cmd(targets, dotnet_version, release, reload_dotnet, build_dotnet
-        ),
-    }
-}
+            clean_nuget_dir
+        } => {
+            if clean_nuget_dir && let Err(e) = fs::remove_dir_all(paths::bindings_nupkgs()){
+                eprintln!("unable to remove builde dirs due to  {e}. Continuing....");
+                
+            }
+            fs::create_dir_all(paths::bindings_runtime_dir()).with_context(|| {
+                format!(
+                    "create_dir_all failed: {}",
+                    paths::bindings_runtime_dir().display()
+                )
+            })?;
 
-fn build_native_cmd(
-    targets: Vec<Target>,
-    dotnet_version: paths::DotNetVersion,
-    release: bool,
-    reload_dotnet: bool,
-    build_dotnet: bool,
-) -> Result<()> {
-    fs::create_dir_all(paths::bindings_runtime_dir()).with_context(|| {
-        format!(
-            "create_dir_all failed: {}",
-            paths::bindings_runtime_dir().display()
-        )
-    })?;
+            for target in &targets {
+                build_native::build_and_stage(target, release)?;
+            }
+            let nuget_package_version = format!("1.0.{}", build_hash());
+            build_native::pack_nuget(release, &nuget_package_version)?;
+            if reload_dotnet{
+                println!("Removing cache file");
+                if let Some(cache_file) = paths::maui_obj_nuget_cache()
+                && let Err(e) = fs::remove_file(cache_file){
+                    eprintln!("failed to delete nuget cache due to {e}");
+                }
 
-    for target in &targets {
-        build_native::build_and_stage(target, release)?;
-    }
-    let nuget_package_version = format!("1.0.{}", build_hash());
-    build_native::pack_nuget(release, &nuget_package_version)?;
-    if reload_dotnet{
+                println!("Reloading package cache");
+                let mut restore = process::cmd_in_dir("dotnet", &paths::maui_root());
+                restore
+                    .arg("restore")
+                    .arg(paths::maui_project_file());
+                process::run(restore)?;
+            } 
 
-        let mut restore = process::cmd_in_dir("dotnet", &paths::maui_root());
-        restore
-            .arg("restore")
-            .arg(paths::maui_project_file())
-            .arg(format!("-p:FractalNativeVersion={}", nuget_package_version));
+            if build_dotnet {
+                for target in targets {
+                        build_dotnet_solution(
+                            target.platform,
+                            target.arch,
+                            dotnet_version,
+                            release,
+                        )?;
+                }
+            }
 
-        process::run(restore)?;
-    } 
-
-    if build_dotnet {
-        for target in targets {
-                build_dotnet_solution(
-                    target.platform,
-                    target.arch,
-                    dotnet_version,
-                    release,
-                )?;
+            Ok(())
         }
+        
     }
-
-    Ok(())
 }
+
 
 fn build_dotnet_solution(
     platform: paths::Platform,
