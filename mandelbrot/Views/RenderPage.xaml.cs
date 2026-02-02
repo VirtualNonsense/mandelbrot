@@ -16,6 +16,7 @@ public partial class RenderPage : ContentPage
 
 
     private (float x, float y)? _dragStart;
+    private bool _isPinching =  false;
 
     public RenderPage(RenderViewModel viewModel)
     {
@@ -32,7 +33,17 @@ public partial class RenderPage : ContentPage
             });
         };
 
+        PinchGestureRecognizer pinchGestureRecognizer = new PinchGestureRecognizer();
+        pinchGestureRecognizer.PinchUpdated += OnPinchUpdated;
+        Canvas.GestureRecognizers.Add(pinchGestureRecognizer);
+
         UpdateHud();
+    }
+
+    private void OnPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
+    {
+        _isPinching = e.Status is GestureStatus.Started or GestureStatus.Running;
+        _vm.ZoomAtPixel((int)(e.Scale * 20));
     }
 
     protected override void OnAppearing()
@@ -103,6 +114,8 @@ public partial class RenderPage : ContentPage
 
     private void OnCanvasTouch(object? sender, SKTouchEventArgs e)
     {
+        if (_isPinching)
+            return;
         switch (e.ActionType)
         {
             case SKTouchAction.Pressed:

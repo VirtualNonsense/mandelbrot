@@ -91,6 +91,20 @@ public sealed class CameraViewModel
         _state = s2 with { CenterWorld = newCenter };
     }
 
+    public void ZoomAtPixel(int delta)
+    {
+        var s = _state;
+        var zoom = Delta(s.Zoom, delta);
+
+        if (!IsViewportValid(s.ViewportPx))
+            return;
+        
+        // Update zoom (clamped)
+        var newZoom = Clamp(zoom, _minZoom, _maxZoom);
+        _state = s with { Zoom = newZoom };
+    }
+
+
     // ---- Coordinate conversions (useful for renderers) ----------------------
 
     public WorldPoint ScreenToWorld(PixelPoint px) => ScreenToWorld(px, _state);

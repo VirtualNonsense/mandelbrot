@@ -114,6 +114,15 @@ public sealed class RenderViewModel : INotifyPropertyChanged, IDisposable
 
         RequestFrame();
     }
+    public void ZoomAtPixel(int delta)
+    {
+        lock (_cameraGate)
+        {
+            _camera.ZoomAtPixel(delta);
+        }
+
+        RequestFrame();
+    }
 
     public void RequestFrame()
     {
