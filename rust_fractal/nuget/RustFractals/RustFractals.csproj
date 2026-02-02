@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>  
+  <ItemGroup>
+    <Compile Include=".\*.cs" />
+  </ItemGroup> 
+
+  <ItemGroup>
+
+    <!-- Pack native libs exactly into runtimes/... inside the nupkg -->
+    <None Include="runtimes\**\*"
+          Pack="true"
+          PackagePath="runtimes\" />
+  </ItemGroup>
+
+</Project>

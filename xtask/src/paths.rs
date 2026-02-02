@@ -34,19 +34,9 @@ impl DotNetVersion {
     }
 }
 impl Platform {
-    pub fn parse(s: &str) -> anyhow::Result<Self> {
-        match s.to_ascii_lowercase().as_str() {
-            "windows" => Ok(Self::Windows),
-            "android" => Ok(Self::Android),
-            "ios" => Ok(Self::Ios),
-            "osx" | "macos" => Ok(Self::Osx),
-            _ => anyhow::bail!("unknown platform: {s} (expected windows|android|ios|osx)"),
-        }
-    }
-
     pub fn as_str(self) -> &'static str {
         match self {
-            Platform::Windows => "windows",
+            Platform::Windows => "win",
             Platform::Android => "android",
             Platform::Ios => "ios",
             Platform::Osx => "osx",
@@ -103,31 +93,32 @@ pub fn maui_project_file() -> PathBuf {
     file
 }
 
+/// c# nuget directory withing rust_fractal.
+pub fn rust_fractal_nuget() -> PathBuf {
+    rust_fractal_root().join("nuget")
+}
+
+/// c# packages location within rust_fractal
+pub fn bindings_root() -> PathBuf {
+    rust_fractal_nuget().join("RustFractals")
+}
+/// c# packages location within rust_fractal
+pub fn bindings_root_project_file() -> PathBuf {
+    bindings_root().join("RustFractals.csproj")
+}
+/// packed nuget artifacts
+pub fn bindings_nupkgs() -> PathBuf {
+    rust_fractal_nuget().join("nupkgs")
+}
+
 /// Path to the Rust library root (contains Cargo.toml)
 pub fn rust_fractal_root() -> PathBuf {
     project_root().join("rust_fractal")
 }
 
-/// Destination directory inside the MAUI solution tree.
-/// Project-specific: this is your staging root.
-pub fn destination_root() -> PathBuf {
-    project_root().join("mandelbrot").join("CsBindGen")
-}
-
-/// Generated C# bindings destination.
-/// In your layout, this equals destination_root().
-pub fn destination_bindings_dir() -> PathBuf {
-    destination_root()
-}
-
 /// Where native binaries should be staged.
-pub fn destination_native_runtimes_dir() -> PathBuf {
-    destination_bindings_dir().join("runtimes")
-}
-
-/// Where the Rust crate emits generated C# bindings.
-pub fn rust_generated_csharp_dir() -> PathBuf {
-    rust_fractal_root().join("target").join("csharp")
+pub fn bindings_runtime_dir() -> PathBuf {
+    bindings_root().join("runtimes")
 }
 
 /// Validate that rust_fractal exists (we do NOT create this silently).
@@ -138,16 +129,6 @@ pub fn assert_rust_fractal_exists() {
         "Expected rust_fractal Cargo.toml at: {}",
         cargo_toml.display()
     );
-}
-
-impl DotNetVersion {
-    pub fn parse(s: &str) -> anyhow::Result<Self> {
-        match s {
-            "8" | "net8" | "net8.0" => Ok(Self::Net8),
-            "10" | "net10" | "net10.0" => Ok(Self::Net10),
-            _ => anyhow::bail!("unsupported .NET version: {s} (expected 8 or 10)"),
-        }
-    }
 }
 
 /// `{platform}-{arch}`
@@ -175,6 +156,38 @@ pub fn native_lib_ext(platform: Platform) -> &'static str {
     }
 }
 
+pub fn dotnet_tfm(version: DotNetVersion, platform: Platform) -> String {
+    let base = version.as_str();
+
+    match platform {
+        Platform::Android => format!("{base}-android"),
+        Platform::Ios => format!("{base}-ios"),
+        Platform::Osx => format!("{base}-maccatalyst"),
+        Platform::Windows => {
+            // Keep the Windows min version explicit
+            format!("{base}-windows10.0.19041.0")
+        }
+    }
+}
+
+pub(crate) fn dotnet_rid(platform: Platform, arch: Arch) -> &'static str {
+    match (platform, arch) {
+        (Platform::Windows, Arch::X64) => "win-x64",
+        (Platform::Windows, Arch::Arm64) => "win-arm64",
+
+        (Platform::Android, Arch::Arm64) => "android-arm64",
+        (Platform::Android, Arch::X64) => "android-x64",
+
+        // MacCatalyst RIDs:
+        (Platform::Osx, Arch::Arm64) => "maccatalyst-arm64",
+        (Platform::Osx, Arch::X64) => "maccatalyst-x64",
+
+        // iOS RIDs (device):
+        (Platform::Ios, Arch::Arm64) => "ios-arm64",
+
+        _ => panic!("unsupported .NET RID for {:?} {:?}", platform, arch),
+    }
+}
 /// `{prefix}{stem}.{ext}`
 pub fn native_lib_filename(platform: Platform) -> String {
     format!(
@@ -188,7 +201,8 @@ pub fn native_lib_filename(platform: Platform) -> String {
 /// Full staging path:
 /// `destination_root/runtimes/{platform}-{arch}/{name}{ext}`
 pub fn destination_native_lib_path(platform: Platform, arch: Arch) -> PathBuf {
-    destination_native_runtimes_dir()
+    bindings_runtime_dir()
         .join(runtime_dir_name(platform, arch))
+        .join("native")
         .join(native_lib_filename(platform))
 }

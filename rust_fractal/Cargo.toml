@@ -10,3 +10,6 @@ crate-type = ["cdylib"]
 bindgen = "0.72.1"
 csbindgen = "1.9.6"
 
+[dependencies]
+rayon = "1.11.0"
+

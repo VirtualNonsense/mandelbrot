@@ -1,15 +1,15 @@
 use crate::paths::{self, Arch, Platform};
-use crate::process::{cmd_in_dir, run};
+use crate::process::{self, cmd_in_dir, run};
 use anyhow::{Context, Result, anyhow};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Clone)]
 pub struct TargetSpec {
     pub cargo_target: &'static str,
     pub arch: Arch,
 }
-
 pub fn targets_for(platform: Platform) -> &'static [TargetSpec] {
     match platform {
         Platform::Windows => &[TargetSpec {
@@ -51,6 +51,40 @@ fn host_os_is_windows() -> bool {
     cfg!(target_os = "windows")
 }
 
+pub fn build_hash() -> String {
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system time before UNIX_EPOCH")
+        .as_secs();
+
+    secs.to_string()
+}
+pub(crate) fn pack_nuget(release: bool, version: &str) -> Result<()> {
+    paths::assert_rust_fractal_exists();
+
+    let csproj = paths::bindings_root_project_file();
+    if !csproj.is_file() {
+        anyhow::bail!("NuGet csproj not found: {}", csproj.display());
+    }
+
+    // Ensure output feed dir exists (allowed)
+    let out_dir = paths::bindings_nupkgs();
+
+    let config = if release { "Release" } else { "Debug" };
+
+    let mut cmd = process::cmd_in_dir("dotnet", &paths::bindings_root());
+    cmd.arg("pack")
+        .arg(csproj)
+        .arg("-c")
+        .arg(config)
+        .arg("-o")
+        .arg(out_dir);
+
+    cmd.arg(format!("/p:PackageVersion={}", version)); // see note below
+
+    process::run(cmd).context("dotnet pack failed")?;
+    Ok(())
+}
 pub fn build_and_stage(platform: Platform, release: bool) -> Result<()> {
     paths::assert_rust_fractal_exists();
 
