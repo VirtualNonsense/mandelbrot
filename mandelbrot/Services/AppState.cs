@@ -7,16 +7,14 @@ public class AppState : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    private Approach _selectedApproach = Approach.CSharpBaseLine;
-
     public Approach SelectedApproach
     {
-        get => _selectedApproach;
+        get;
         set
         {
-            if (_selectedApproach == value) return;
-            _selectedApproach = value;
+            if (field == value) return;
+            field = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedApproach)));
         }
-    }
+    } = Approach.CSharpBaseLine;
 }
