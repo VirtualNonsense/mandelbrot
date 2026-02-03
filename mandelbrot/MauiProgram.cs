@@ -22,10 +22,16 @@ namespace mandelbrot
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            builder.Services.AddSingleton<AppState>();
+            builder.Services.AddSingleton<AppState>(_ =>
+            {
+                var state = new AppState();
+                state.SelectedApproach = Approach.NaiveRustRenderer;
+                return state;
+            });
             builder.Services.AddSingleton<IColorProvider, ClassicColormapProvider>();
             builder.Services.AddSingleton<RendererRegistry>(sp => new RendererRegistry([
-                (Approach.CSharpBaseLine, new MandelbrotBaselineRenderer(sp.GetService<IColorProvider>()))
+                (Approach.CSharpBaseLine, new MandelbrotBaselineRenderer(sp.GetService<IColorProvider>())),
+                (Approach.NaiveRustRenderer, new NaiveRustCallMandelbrotIFractalRenderer()),
             ]));
             builder.Services.AddSingleton<CameraViewModel>(_ =>
             {
