@@ -10,6 +10,7 @@ public sealed class CameraViewModel
     // Tunables (keep explicit)
     private readonly ulong _minZoom;
     private readonly ulong _maxZoom;
+    private readonly double _minZoomDelta = 0.3;
 
     public CameraViewModel(
         CameraState initial,
@@ -69,6 +70,9 @@ public sealed class CameraViewModel
     public void ZoomAtPixel(PixelPoint anchorPx, int delta)
     {
         var s = _state;
+
+        delta = adjustZoom(delta); 
+        
         var zoom = Delta(s.Zoom, delta);
 
         if (!IsViewportValid(s.ViewportPx))
@@ -94,6 +98,7 @@ public sealed class CameraViewModel
     public void ZoomAtPixel(int delta)
     {
         var s = _state;
+        delta = adjustZoom(delta);
         var zoom = Delta(s.Zoom, delta);
 
         if (!IsViewportValid(s.ViewportPx))
@@ -164,5 +169,15 @@ public sealed class CameraViewModel
             return 0;
         }
         return current - abs;
+    }
+
+    private int adjustZoom(int delta)
+    {
+        if ((double)Math.Abs(delta) / _state.Zoom < _minZoomDelta)
+        {
+            delta = (int)(Math.Sign(delta) * _minZoomDelta *  _state.Zoom);
+        }
+
+        return delta;
     }
 }
