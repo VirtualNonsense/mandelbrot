@@ -37,6 +37,7 @@ namespace mandelbrot
             {
                 var initialCamera = new CameraState(
                     CenterWorld: WorldPoint.Of(-0.5f, 0.0f),
+                    InitialZoom: 300,
                     Zoom: 300,
                     ViewportPx: PixelSize.Of(1, 1)
                 );

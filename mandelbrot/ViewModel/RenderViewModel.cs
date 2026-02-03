@@ -58,7 +58,8 @@ public sealed class RenderViewModel : INotifyPropertyChanged, IDisposable
     }
 
     public string HudApproach => $"Approach: {_appState.SelectedApproach}";
-    public string HudStats => $"Compute: {_computeFps:0.0} fps | Avg: {_avgCompute.AverageMs:0.00} ms | {_target?.Width}×{_target?.Height}px";
+    public string HudStats => $"Compute: {_computeFps:0.0} fps | Avg: {_avgCompute.AverageMs:0.00} ms | {_target?.Width}×{_target?.Height}px | Magnification {SnapshotCamera().Magnification():F}";
+    
 
     public void SetMaxIterations(int maxIter)
     {
