@@ -4,6 +4,7 @@ monitor = "xtask monitor-rust-source"
 build-native = "xtask build-native"
 build-windows-debug = "build-native --targets windows-x64  --reload-dotnet --clean-nuget-dir"
 build-windows-release = "build-native --targets windows-x64  --reload-dotnet --clean-nuget-dir --release"
+build-android-release = "build-native --targets android-arm64  --reload-dotnet --clean-nuget-dir --build-dotnet --release"
 
 
 [target.aarch64-linux-android]
