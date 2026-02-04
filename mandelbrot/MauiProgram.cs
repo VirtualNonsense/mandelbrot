@@ -2,7 +2,6 @@
 using mandelbrot.Render;
 using mandelbrot.Services;
 using mandelbrot.ViewModel;
-using mandelbrot.Views;
 using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
@@ -25,7 +24,7 @@ namespace mandelbrot
             builder.Services.AddSingleton<AppState>(_ =>
             {
                 var state = new AppState();
-                state.SelectedApproach = Approach.NaiveRustRenderer;
+                state.SelectedApproach = Approach.CSharpBaseLine;
                 return state;
             });
             builder.Services.AddSingleton<IColorProvider, ClassicColormapProvider>();

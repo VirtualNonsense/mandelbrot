@@ -43,6 +43,7 @@ public partial class RenderPage : ContentPage
     private void OnPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
     {
         _isPinching = e.Status is GestureStatus.Started or GestureStatus.Running;
+        if (!_isPinching) return;
         _vm.ZoomAtPixel((int)(e.Scale * 20));
     }
 
