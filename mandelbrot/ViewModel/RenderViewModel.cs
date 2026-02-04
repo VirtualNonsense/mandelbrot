@@ -38,7 +38,6 @@ public sealed class RenderViewModel : INotifyPropertyChanged, IDisposable
     private double _computeFps;
 
     private readonly ManualResetEventSlim _renderSignal = new(initialState: false);
-    private int _pendingRequests; // coalescing counter
 
     public RenderViewModel(AppState appState, RendererRegistry registry, CameraViewModel initialCamera)
     {
@@ -127,7 +126,6 @@ public sealed class RenderViewModel : INotifyPropertyChanged, IDisposable
 
     public void RequestFrame()
     {
-        Interlocked.Increment(ref _pendingRequests);
         _renderSignal.Set();
     }
 
@@ -184,7 +182,6 @@ public sealed class RenderViewModel : INotifyPropertyChanged, IDisposable
             if (ct.IsCancellationRequested) break;
 
             // coalesce requests
-            Interlocked.Exchange(ref _pendingRequests, 0);
             _renderSignal.Reset();
 
             var t = Volatile.Read(ref _target);
