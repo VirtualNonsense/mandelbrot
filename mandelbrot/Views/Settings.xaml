@@ -2,9 +2,21 @@
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="mandelbrot.Views.Settings">
+             xmlns:views="clr-namespace:mandelbrot.Views"
+             x:Class="mandelbrot.Views.Settings" x:DataType="views:Settings">
     <ContentPage.Content>
-        
-        <Button Text="Toggle theme" Clicked="OnToggleTheme"> </Button>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Button Grid.Column="0" Grid.Row="0" Text="Toggle theme" Clicked="OnToggleTheme" />
+
+            <Picker
+                Grid.Column="0" Grid.Row="1"
+                Title="Render approach"
+                ItemsSource="{Binding Approaches, Mode=OneTime}"
+                SelectedItem="{Binding SelectedApproach, Mode=TwoWay}" />
+        </Grid>
     </ContentPage.Content>
 </ContentPage>
