@@ -1,6 +1,10 @@
 // lib.rs, simple FFI code
 
+pub(crate) mod colormap;
+
 use rayon::prelude::*;
+
+use crate::colormap::get_color;
 #[unsafe(no_mangle)]
 pub extern "C" fn test() -> u32 {
     6
@@ -67,7 +71,7 @@ pub unsafe extern "C" fn mandelbrot_baseline_render_u32(
                 let x_world = cx + ((px_f - half_w) * inv_zoom);
 
                 let iter = iterate_mandelbrot(x_world, y_world, max_iter);
-                *out = color_baseline(iter, max_iter);
+                *out = get_color(iter, max_iter);
             }
         });
 }
@@ -91,15 +95,4 @@ fn iterate_mandelbrot(x0: f64, y0: f64, max_iter: u32) -> u32 {
         i += 1;
     }
     i
-}
-
-/// Replace this with your real color provider contract.
-/// This just returns green for escaped points and black for inside-set points.
-#[inline]
-fn color_baseline(iter: u32, max_iter: u32) -> u32 {
-    if iter >= max_iter {
-        0xFF00_0000 // opaque black (ARGB)
-    } else {
-        0xFF00_FF00 // opaque green (ARGB)
-    }
 }
