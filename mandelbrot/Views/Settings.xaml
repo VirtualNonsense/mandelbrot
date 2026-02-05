@@ -7,9 +7,8 @@
     <ContentPage.Content>
         <ScrollView>
             <VerticalStackLayout>
-                <Button Text="Toggle theme" Clicked="OnToggleTheme" BackgroundColor="{Binding BackgroundColor}" />
+                <Button Text="Toggle theme" Clicked="OnToggleTheme" />
                 <Picker
-                    
                     ItemsSource="{Binding Approaches, Mode=OneTime}"
                     SelectedItem="{Binding SelectedApproach, Mode=TwoWay}" />
             </VerticalStackLayout>
