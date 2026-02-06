@@ -16,7 +16,8 @@ public partial class RenderPage : ContentPage
 
 
     private (float x, float y)? _dragStart;
-    private bool _isPinching =  false;
+    private bool _isPinching;
+    private const double PinchZoomSensitivity = 20.0;
 
     public RenderPage(RenderViewModel viewModel)
     {
@@ -42,9 +43,48 @@ public partial class RenderPage : ContentPage
 
     private void OnPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
     {
-        _isPinching = e.Status is GestureStatus.Started or GestureStatus.Running;
-        if (!_isPinching) return;
-        _vm.ZoomAtPixel((int)(e.Scale * 20));
+        switch (e.Status)
+        {
+            case GestureStatus.Started:
+                _isPinching = true;
+                return;
+
+            case GestureStatus.Running:
+                if (!_isPinching)
+                    return;
+
+                if (_installedW <= 0 || _installedH <= 0)
+                    return;
+
+
+                var anchorX = (float)(e.ScaleOrigin.X * _installedW);
+                var anchorY = (float)(e.ScaleOrigin.Y * _installedH);
+
+                var deltaD = e.Scale - 1;
+
+                // if (Math.Abs(deltaD) < 0.01)
+                //     return;
+                deltaD *= PinchZoomSensitivity;
+
+                var delta =
+                    deltaD >= int.MaxValue ? int.MaxValue :
+                    deltaD <= int.MinValue ? int.MinValue :
+                    (int)deltaD;
+
+                if (delta != 0)
+                {
+                    _vm.ZoomAtPixel(anchorX, anchorY, delta);
+                    // If your VM already triggers FrameReady, you can omit InvalidateSurface here.
+                    Canvas.InvalidateSurface();
+                }
+
+                return;
+
+            case GestureStatus.Completed:
+            case GestureStatus.Canceled:
+                _isPinching = false;
+                return;
+        }
     }
 
     protected override void OnAppearing()
@@ -75,7 +115,7 @@ public partial class RenderPage : ContentPage
         var frame = _vm.TryGetLatestFrame();
         if (frame is null) return;
 
-        var (frontPtr, w, h, rowBytes, frameId) = frame.Value;
+        var (frontPtr, w, h, rowBytes, _) = frame.Value;
 
         EnsureInstalledBitmap(frontPtr, w, h, rowBytes);
         canvas.DrawBitmap(_bitmap!, 0, 0);
